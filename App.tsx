@@ -1,15 +1,15 @@
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { ViewMode, Student, StudentStatus, Language, AdminUser, ScheduleConfig, DaySchedule } from './types.ts';
-import { sheetsService } from './services/googleSheetsService.ts';
-import Layout from './components/Layout.tsx';
-import HomeView from './views/HomeView.tsx';
-import GateView from './views/GateView.tsx';
-import ClassroomView from './views/ClassroomView.tsx';
-import AdminView from './views/AdminView.tsx';
-import ParentsView from './views/ParentsView.tsx';
-import LoginView from './views/LoginView.tsx';
-import { t } from './i18n.ts';
+import { ViewMode, Student, StudentStatus, Language, AdminUser, ScheduleConfig, DaySchedule } from './types';
+import { sheetsService } from './services/googleSheetsService';
+import Layout from './components/Layout';
+import HomeView from './views/HomeView';
+import GateView from './views/GateView';
+import ClassroomView from './views/ClassroomView';
+import AdminView from './views/AdminView';
+import ParentsView from './views/ParentsView';
+import LoginView from './views/LoginView';
+import { t } from './i18n';
 
 const DEFAULT_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw6b29fHkXcCxFVH1BJbmLFXoyZWMHc60awEFKbdU8orr3Z4KyfFMyl8hd9JiL0Kn4kRg/exec";
 
