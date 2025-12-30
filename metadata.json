@@ -1,0 +1,7 @@
+{
+  "name": "Vercel copy EduDismiss - School Dismissal System",
+  "description": "A high-performance school dismissal management system designed for gatekeepers, classroom displays, and administrators, utilizing Google Sheets as a lightweight backend.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
