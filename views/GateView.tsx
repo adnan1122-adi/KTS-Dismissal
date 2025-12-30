@@ -12,23 +12,50 @@ interface GateViewProps {
 const GateView: React.FC<GateViewProps> = ({ students, lang, onUpdateStatus }) => {
   const [search, setSearch] = useState('');
   const [selectedSection, setSelectedSection] = useState<Section | 'ALL'>('ALL');
+  const [selectedGrade, setSelectedGrade] = useState<string>('ALL');
+  const [selectedClass, setSelectedClass] = useState<string>('ALL');
   const [filterStatus, setFilterStatus] = useState<StudentStatus | 'ALL'>('ALL');
 
   const isRTL = lang === 'AR';
+
+  // Dynamic filter options
+  const grades = useMemo(() => {
+    const filteredBySection = students.filter(s => selectedSection === 'ALL' || s.section === selectedSection);
+    return Array.from(new Set(filteredBySection.map(s => s.grade))).sort();
+  }, [students, selectedSection]);
+
+  const classes = useMemo(() => {
+    const filteredByGrade = students.filter(s => 
+      (selectedSection === 'ALL' || s.section === selectedSection) &&
+      (selectedGrade === 'ALL' || s.grade === selectedGrade)
+    );
+    return Array.from(new Set(filteredByGrade.map(s => s.className))).sort();
+  }, [students, selectedSection, selectedGrade]);
 
   const filteredStudents = useMemo(() => {
     const term = search.trim().toLowerCase();
     return students.filter(s => {
       const matchesSearch = !term || s.nameEn.toLowerCase().includes(term) || s.nameAr.includes(term) || s.id.toLowerCase().includes(term);
       const matchesSection = selectedSection === 'ALL' || s.section === selectedSection;
+      const matchesGrade = selectedGrade === 'ALL' || s.grade === selectedGrade;
+      const matchesClass = selectedClass === 'ALL' || s.className === selectedClass;
       const matchesStatus = filterStatus === 'ALL' || s.status === filterStatus;
-      return matchesSearch && matchesSection && matchesStatus;
+      return matchesSearch && matchesSection && matchesGrade && matchesClass && matchesStatus;
     }).slice(0, 150);
-  }, [search, selectedSection, students, filterStatus]);
+  }, [search, selectedSection, selectedGrade, selectedClass, filterStatus, students]);
+
+  const handleResetCalled = () => {
+    const calledStudents = students.filter(s => s.status === StudentStatus.CALLED || s.status === StudentStatus.ON_THE_WAY);
+    if (calledStudents.length === 0) return;
+    
+    if (window.confirm(t('confirmReset', lang))) {
+      calledStudents.forEach(s => onUpdateStatus(s.id, StudentStatus.IN_CLASS));
+    }
+  };
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-32">
-      <div className="bg-white p-6 rounded-[2.5rem] shadow-xl border border-slate-100 space-y-6 sticky top-24 z-30">
+      <div className="bg-white p-6 rounded-[2.5rem] shadow-xl border border-slate-100 space-y-4 sticky top-24 z-30">
         <div className="flex flex-col lg:flex-row gap-4">
           <input 
             type="text" 
@@ -37,18 +64,52 @@ const GateView: React.FC<GateViewProps> = ({ students, lang, onUpdateStatus }) =
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-            <select className="p-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-black outline-none appearance-none cursor-pointer" value={selectedSection} onChange={(e) => setSelectedSection(e.target.value as any)}>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+            <select 
+              className="p-3 bg-slate-50 border border-slate-100 rounded-xl text-[10px] font-black outline-none appearance-none cursor-pointer" 
+              value={selectedSection} 
+              onChange={(e) => { setSelectedSection(e.target.value as any); setSelectedGrade('ALL'); setSelectedClass('ALL'); }}
+            >
               <option value="ALL">📦 {t('selectSection', lang)}</option>
               <option value="Elementary">🎒 {t('elementary', lang)}</option>
               <option value="MiddleHigh">🎓 {t('middleHigh', lang)}</option>
             </select>
-            <select className="p-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-black outline-none appearance-none cursor-pointer" value={filterStatus} onChange={(e) => setFilterStatus(e.target.value as any)}>
+
+            <select 
+              className="p-3 bg-slate-50 border border-slate-100 rounded-xl text-[10px] font-black outline-none appearance-none cursor-pointer" 
+              value={selectedGrade} 
+              onChange={(e) => { setSelectedGrade(e.target.value); setSelectedClass('ALL'); }}
+            >
+              <option value="ALL">📊 {t('selectGrade', lang)}</option>
+              {grades.map(g => <option key={g} value={g}>{t('grade', lang)} {g}</option>)}
+            </select>
+
+            <select 
+              className="p-3 bg-slate-50 border border-slate-100 rounded-xl text-[10px] font-black outline-none appearance-none cursor-pointer" 
+              value={selectedClass} 
+              onChange={(e) => setSelectedClass(e.target.value)}
+            >
+              <option value="ALL">🏫 {t('selectClass', lang)}</option>
+              {classes.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+
+            <select 
+              className="p-3 bg-slate-50 border border-slate-100 rounded-xl text-[10px] font-black outline-none appearance-none cursor-pointer" 
+              value={filterStatus} 
+              onChange={(e) => setFilterStatus(e.target.value as any)}
+            >
               <option value="ALL">✨ {isRTL ? 'كل الحالات' : 'All Status'}</option>
               <option value={StudentStatus.IN_CLASS}>{isRTL ? 'في الفصل' : 'In Class'}</option>
               <option value={StudentStatus.CALLED}>{isRTL ? 'تم النداء' : 'Called'}</option>
               <option value={StudentStatus.DISMISSED}>{isRTL ? 'تم الانصراف' : 'Dismissed'}</option>
             </select>
+
+            <button 
+              onClick={handleResetCalled}
+              className="p-3 bg-red-50 text-red-600 border border-red-100 rounded-xl text-[10px] font-black uppercase hover:bg-red-100 transition-colors"
+            >
+              🔄 {t('resetCalled', lang)}
+            </button>
           </div>
         </div>
       </div>

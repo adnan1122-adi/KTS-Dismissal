@@ -22,10 +22,23 @@ const ClassroomView: React.FC<ClassroomViewProps> = ({ students, examMode, lang,
   const prevRelevantCalledIds = useRef<Set<string>>(new Set());
 
   useEffect(() => {
-    // Sharp high-frequency digital beep for loud environments
     beepAudio.current = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
     beepAudio.current.volume = 1.0; 
   }, []);
+
+  // Filter options
+  const grades = useMemo(() => {
+    const filteredBySection = students.filter(s => selectedSection === 'ALL' || s.section === selectedSection);
+    return Array.from(new Set(filteredBySection.map(s => String(s.grade)))).sort();
+  }, [students, selectedSection]);
+
+  const classes = useMemo(() => {
+    const filteredByGrade = students.filter(s => 
+      (selectedSection === 'ALL' || s.section === selectedSection) &&
+      (!selectedGrade || String(s.grade) === selectedGrade)
+    );
+    return Array.from(new Set(filteredByGrade.map(s => s.className))).sort();
+  }, [students, selectedSection, selectedGrade]);
 
   const relevantCalledIds = useMemo<Set<string>>(() => {
     return new Set<string>(
@@ -98,14 +111,30 @@ const ClassroomView: React.FC<ClassroomViewProps> = ({ students, examMode, lang,
           
           {!examMode && (
             <div className="flex flex-wrap items-center gap-2">
-              <select className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-black outline-none appearance-none" value={selectedSection} onChange={(e) => { setSelectedSection(e.target.value as any); setSelectedGrade(''); setSelectedClass(''); }}>
+              <select 
+                className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-black outline-none appearance-none" 
+                value={selectedSection} 
+                onChange={(e) => { setSelectedSection(e.target.value as any); setSelectedGrade(''); setSelectedClass(''); }}
+              >
                 <option value="ALL">{t('selectSection', lang)}</option>
                 <option value="Elementary">{t('elementary', lang)}</option>
                 <option value="MiddleHigh">{t('middleHigh', lang)}</option>
               </select>
-              <select className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-black outline-none appearance-none" value={selectedGrade} onChange={(e) => setSelectedGrade(e.target.value)}>
+              <select 
+                className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-black outline-none appearance-none" 
+                value={selectedGrade} 
+                onChange={(e) => { setSelectedGrade(e.target.value); setSelectedClass(''); }}
+              >
                 <option value="">{t('selectGrade', lang)}</option>
-                {[...new Set(students.map(s => String(s.grade)))].sort().map(g => <option key={g} value={g}>{t('grade', lang)} {g}</option>)}
+                {grades.map(g => <option key={g} value={g}>{t('grade', lang)} {g}</option>)}
+              </select>
+              <select 
+                className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-black outline-none appearance-none" 
+                value={selectedClass} 
+                onChange={(e) => setSelectedClass(e.target.value)}
+              >
+                <option value="">{t('selectClass', lang)}</option>
+                {classes.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
           )}
